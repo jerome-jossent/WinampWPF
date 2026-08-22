@@ -1,0 +1,89 @@
+﻿<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"    
+    xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="av"
+    x:Class="WinampWPF.Views.PlayerView"
+    av:DesignHeight="199.83" av:DesignWidth="470"    
+    >
+
+    <Border
+        Background="#181818"
+        CornerRadius="8"
+        Padding="20,0">
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- titres -->
+            <StackPanel Grid.Row="0">
+                <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="{Binding Artist}" FontSize="15" Foreground="#BBBBBB"/>
+                <TextBlock Text="{Binding Album}" FontSize="13" Foreground="#888888"/>
+            </StackPanel>
+
+            <!-- volume -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Text="Volume" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                <Slider Margin="4" Width="80" Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center"/>
+                <Button Content="🔇" FontSize="20" Command="{Binding ToggleMuteCommand}" Width="30" Height="30"/>
+            </StackPanel>
+
+            <!-- barre de défilement temporelle -->
+            <Grid Grid.Row="1">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                    Text="{Binding ElapsedTime}"
+                    Foreground="#AAAAAA"
+                    VerticalAlignment="Center"/>
+
+                <Slider Grid.Column="1"
+                    x:Name="ProgressSlider"
+                    Minimum="0"
+                    Maximum="{Binding DurationSeconds}"
+                    Value="{Binding PositionSeconds, Mode=TwoWay}"
+                    Margin="5"
+                    VerticalAlignment="Center"
+                    Cursor="Hand"
+
+                    PreviewMouseLeftButtonDown="ProgressSlider_PreviewMouseLeftButtonDown"
+                    PreviewMouseLeftButtonUp="ProgressSlider_PreviewMouseLeftButtonUp"/>
+
+                <TextBlock
+                    Grid.Column="2"
+                    Text="{Binding RemainingTime}"
+                    Foreground="#AAAAAA"
+                    VerticalAlignment="Center"/>
+
+            </Grid>
+
+            <!-- boutons -->
+            <StackPanel Grid.Row="2"
+                Orientation="Horizontal"
+                HorizontalAlignment="Center"
+                Margin="0,15,0,0">
+
+                <Button Content="⏮" FontSize="20" Command="{Binding PreviousCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="33" Height="35" Margin="4"/>
+                <Button Content="▶/⏸" FontSize="20" Command="{Binding TogglePlayPauseCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="63" Height="35" Margin="4"/>
+                <!--<Button Content="⏹" FontSize="20" Command="{Binding StopCommand}" Width="55" Margin="4"/>-->
+                <Button Content="⏭" FontSize="20" Command="{Binding NextCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="33" Height="35" Margin="4"/>
+                <Button Content="🔀" FontSize="20" Command="{Binding ToggleShuffleCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="33" Height="35" Margin="4"/>
+                <TextBlock VerticalAlignment="Center" Text="{Binding ShuffleEnabled, StringFormat=Shuffle : \{0\}}" Foreground="#AAAAAA" Margin="10,0,0,0"/>
+
+            </StackPanel>
+
+        </Grid>
+
+    </Border>
+
+</UserControl>

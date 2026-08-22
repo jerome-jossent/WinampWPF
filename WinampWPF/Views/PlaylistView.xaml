@@ -1,0 +1,131 @@
+﻿<UserControl x:Class="WinampWPF.Views.PlaylistView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+
+             xmlns:local="clr-namespace:WinampWPF.Converters"
+             
+             mc:Ignorable="d"
+             AllowDrop="True"
+             DragOver="PlaylistView_DragOver"
+             Drop="PlaylistView_Drop">
+    <UserControl.Resources>
+        <local:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter" />
+    </UserControl.Resources>
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- BARRE D'OUTILS -->
+        <DockPanel Grid.Row="0" Margin="0">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                <Button Content="+ Fichiers" Command="{Binding AddFilesCommand}" Margin="0,0,5,0" Padding="5"/>
+                <Button Content="+ Dossier" Command="{Binding AddFolderCommand}" Margin="0,0,5,0" Padding="5"/>
+                <Button Content="Supprimer" Command="{Binding RemoveSelectedCommand}" Margin="0,0,5,0" Padding="5"/>
+                <Button Content="Vider" Command="{Binding ClearCommand}" Margin="0,0,5,0" Padding="5"/>
+                <Button Content="Ajouter à la file" Command="{Binding EnqueueSelectedCommand}" Margin="0,0,5,0" Padding="5"/>
+            </StackPanel>
+
+            <TextBox DockPanel.Dock="Right" Width="220" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rechercher..."/>
+        </DockPanel>
+
+        <!-- PLAYLIST -->
+        <ListView x:Name="TrackList" Grid.Row="1" Margin="0,5,0,0"
+          ItemsSource="{Binding FilteredTracks}"
+          SelectedItem="{Binding SelectedTrack, Mode=TwoWay}"
+          SelectionMode="Extended"
+          SelectionChanged="TrackList_SelectionChanged"
+          MouseDoubleClick="TrackList_MouseDoubleClick"
+                Background="Black"
+                  Foreground="GreenYellow"
+                  >
+
+            <ListView.View>
+                <GridView AllowsColumnReorder="True">
+
+                    <!-- TITRE -->
+                    <GridViewColumn Width="300">
+                        <GridViewColumnHeader
+                            PreviewMouseRightButtonUp="ColumnHeader_PreviewMouseRightButtonUp"
+                            Content="{Binding DataContext.TitleSortHeader, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="Title"
+                            Background="#181818" Foreground="White"
+                            />
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayTitle}" FontWeight="{Binding IsPlaying,
+                                                Converter={StaticResource BoolToFontWeightConverter}}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+
+                    <!-- ARTISTE -->
+                    <GridViewColumn Width="220">
+                        <GridViewColumnHeader
+                            PreviewMouseRightButtonUp="ColumnHeader_PreviewMouseRightButtonUp"
+                            Content="{Binding DataContext.ArtistSortHeader, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="Artist"
+                            Background="#181818" Foreground="White"/>
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayArtist}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+
+                    <!-- ALBUM -->
+                    <GridViewColumn Width="220">
+                        <GridViewColumnHeader
+                            PreviewMouseRightButtonUp="ColumnHeader_PreviewMouseRightButtonUp"
+                            Content="{Binding DataContext.AlbumSortHeader, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="Album"
+                            Background="#181818" Foreground="White"/>
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DisplayAlbum}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+
+                    <!-- DUREE -->
+                    <GridViewColumn Width="90">
+                        <GridViewColumnHeader
+                            PreviewMouseRightButtonUp="ColumnHeader_PreviewMouseRightButtonUp"
+                            Content="{Binding DataContext.DurationSortHeader, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="Duration"
+                            Background="#181818" Foreground="White"/>
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding DurationText}" HorizontalAlignment="Right"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+
+                    </GridViewColumn>
+
+                    <!-- FICHIER -->
+                    <GridViewColumn Width="300">
+                        <GridViewColumnHeader
+                            PreviewMouseRightButtonUp="ColumnHeader_PreviewMouseRightButtonUp"
+                            Content="{Binding DataContext.FileSortHeader, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Command="{Binding DataContext.SortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="File"
+                            Background="#181818" Foreground="White"/>
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding FileName}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
+</UserControl>
