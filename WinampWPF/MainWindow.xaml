@@ -5,34 +5,27 @@
 
         Title="{Binding ApplicationName}"
 
-        Width="{Binding WindowWidth}"
-        Height="{Binding WindowHeight}"
-
-        Left="{Binding WindowLeft}"
-        Top="{Binding WindowTop}"
-
-        MinWidth="950" MinHeight="600"
+        ResizeMode="CanResizeWithGrip"
+        Height="202"
 
         WindowStyle="SingleBorderWindow"
         BorderBrush="Black"
         BorderThickness="5"
-        
+
         Background="#101010">
 
+        <!--SizeToContent="WidthAndHeight"-->
+        <!--ResizeMode="CanMinimize"-->
+        
     <Grid Margin="0">
-
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="15"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
         <views:PlayerView
-            Grid.Row="0"
             DataContext="{Binding Player}"/>
 
-        <views:PlaylistView
-            Grid.Row="2"
-            DataContext="{Binding Playlist}"/>
+        <Button Width="30" Height="35" Margin="4"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Right"
+                Content="▤" FontSize="20"
+                Click="PlaylistToggle_Click"
+                />
     </Grid>
 </Window>

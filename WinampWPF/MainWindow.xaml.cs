@@ -1,11 +1,24 @@
 ﻿using System.Windows;
 using WinampWPF.ViewModels;
+using WinampWPF.Views;
 
 namespace WinampWPF;
 
 public partial class MainWindow : Window
 {
     private MainViewModel ViewModel { get; }
+
+    // FENÊTRE PLAYLIST
+    // Null quand elle est fermée. On mémorise ses dernières
+    // dimensions/position connues (fenêtre ouverte ou non) pour
+    // les proposer à la réouverture et les sauvegarder à la
+    // fermeture de l'application.
+    private PlaylistWindow? _playlistWindow;
+    private double _playlistWidth;
+    private double _playlistHeight;
+    private double _playlistLeft;
+    private double _playlistTop;
+    private bool _playlistWasOpen;
 
     public MainWindow()
     {
@@ -24,22 +37,86 @@ public partial class MainWindow : Window
         // la playlist se remplit sans geler l'UI)
         var settings = await ViewModel.LoadSettingsAsync();
 
-        // TAILLE
-        if (settings.WindowWidth > 0)
-            Width = settings.WindowWidth;
-
-        if (settings.WindowHeight > 0)
-            Height = settings.WindowHeight;
-
-        // POSITION
+        // POSITION (le lecteur se dimensionne lui-même à son contenu)
         if (!double.IsNaN(settings.WindowLeft))
             Left = settings.WindowLeft;
 
         if (!double.IsNaN(settings.WindowTop))
             Top = settings.WindowTop;
 
-        // VÉRIFICATION ÉCRAN
         EnsureWindowIsVisible();
+
+        // FENÊTRE PLAYLIST
+        _playlistWidth = settings.PlaylistWindowWidth;
+        _playlistHeight = settings.PlaylistWindowHeight;
+        _playlistLeft = settings.PlaylistWindowLeft;
+        _playlistTop = settings.PlaylistWindowTop;
+
+        if (settings.PlaylistWindowOpen)
+            OpenPlaylistWindow();
+    }
+
+    // BASCULE PLAYLIST
+    private void PlaylistToggle_Click(object sender, RoutedEventArgs e)
+    {
+        if (_playlistWindow is null)
+            OpenPlaylistWindow();
+        else
+            _playlistWindow.Close();
+    }
+
+    private void OpenPlaylistWindow()
+    {
+        if (_playlistWindow is not null)
+        {
+            _playlistWindow.Activate();
+            return;
+        }
+
+        var window = new PlaylistWindow(ViewModel.Playlist)
+        {
+            Owner = this,
+            Width = _playlistWidth,
+            Height = _playlistHeight
+        };
+
+        if (!double.IsNaN(_playlistLeft))
+            window.Left = _playlistLeft;
+
+        if (!double.IsNaN(_playlistTop))
+            window.Top = _playlistTop;
+
+        window.EnsureWindowIsVisible();
+
+        window.Closing += PlaylistWindow_Closing;
+        window.Closed += PlaylistWindow_Closed;
+
+        _playlistWindow = window;
+        _playlistWindow.Show();
+    }
+
+    // On mémorise la taille/position juste avant la fermeture,
+    // pendant que la fenêtre existe encore.
+    private void PlaylistWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        if (_playlistWindow is null)
+            return;
+
+        _playlistWidth = _playlistWindow.Width;
+        _playlistHeight = _playlistWindow.Height;
+        _playlistLeft = _playlistWindow.Left;
+        _playlistTop = _playlistWindow.Top;
+    }
+
+    private void PlaylistWindow_Closed(object? sender, EventArgs e)
+    {
+        if (_playlistWindow is not null)
+        {
+            _playlistWindow.Closing -= PlaylistWindow_Closing;
+            _playlistWindow.Closed -= PlaylistWindow_Closed;
+        }
+
+        _playlistWindow = null;
     }
 
     // VÉRIFICATION POSITION
@@ -50,21 +127,43 @@ public partial class MainWindow : Window
         var virtualWidth = SystemParameters.VirtualScreenWidth;
         var virtualHeight = SystemParameters.VirtualScreenHeight;
 
-        var visible = Left < virtualLeft + virtualWidth && Left + Width > virtualLeft && Top < virtualTop + virtualHeight && Top + Height > virtualTop;
+        var width = ActualWidth > 0 ? ActualWidth : Width;
+        var height = ActualHeight > 0 ? ActualHeight : Height;
+
+        var visible = Left < virtualLeft + virtualWidth && Left + width > virtualLeft
+            && Top < virtualTop + virtualHeight && Top + height > virtualTop;
 
         if (visible)
             return;
 
         // Si la position sauvegardée est invalide,
         // on centre sur l'écran principal.
-        Left = SystemParameters.WorkArea.Left + (SystemParameters.WorkArea.Width - Width) / 2;
-        Top = SystemParameters.WorkArea.Top + (SystemParameters.WorkArea.Height - Height) / 2;
+        Left = SystemParameters.WorkArea.Left + (SystemParameters.WorkArea.Width - width) / 2;
+        Top = SystemParameters.WorkArea.Top + (SystemParameters.WorkArea.Height - height) / 2;
     }
 
     // FERMETURE
     private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
-        ViewModel.SaveSettings(Width, Height, Left, Top);
+        // Si la playlist est encore ouverte, on capture sa position
+        // et sa taille actuelles avant de sauvegarder (elle sera
+        // fermée automatiquement juste après, étant "possédée" par
+        // cette fenêtre, mais son évènement Closing à elle ne
+        // déclenche pas forcément avant la sauvegarde ci-dessous).
+        _playlistWasOpen = _playlistWindow is not null;
+
+        if (_playlistWindow is not null)
+        {
+            _playlistWidth = _playlistWindow.Width;
+            _playlistHeight = _playlistWindow.Height;
+            _playlistLeft = _playlistWindow.Left;
+            _playlistTop = _playlistWindow.Top;
+        }
+
+        ViewModel.SaveSettings(
+            ActualWidth, ActualHeight, Left, Top,
+            _playlistWasOpen, _playlistWidth, _playlistHeight, _playlistLeft, _playlistTop);
+
         ViewModel.Dispose();
     }
 }

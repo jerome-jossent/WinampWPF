@@ -44,13 +44,23 @@
           SelectionMode="Extended"
           SelectionChanged="TrackList_SelectionChanged"
           MouseDoubleClick="TrackList_MouseDoubleClick"
-                Background="Black"
+                Background="#1A1A1A"
                   Foreground="GreenYellow"
                   >
 
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#2A2A2A"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
+
             <ListView.View>
                 <GridView AllowsColumnReorder="True">
-
                     <!-- TITRE -->
                     <GridViewColumn Width="300">
                         <GridViewColumnHeader
@@ -124,7 +134,7 @@
                             Background="#181818" Foreground="White"/>
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding FileName}"/>
+                                <TextBlock Text="{Binding DisplayFile}"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>

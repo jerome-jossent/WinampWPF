@@ -8,10 +8,8 @@
 
     <Border
         Background="#181818"
-        CornerRadius="8"
-        Padding="20,0">
-
-        <Grid>
+        CornerRadius="8">
+        <Grid Margin="5,0" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -19,19 +17,28 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- titres -->
-            <StackPanel Grid.Row="0">
-                <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="White"/>
-                <TextBlock Text="{Binding Artist}" FontSize="15" Foreground="#BBBBBB"/>
-                <TextBlock Text="{Binding Album}" FontSize="13" Foreground="#888888"/>
-            </StackPanel>
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- titres -->
+                <StackPanel Grid.Column="0" >
+                    <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="{Binding Artist}" FontSize="15" Foreground="#BBBBBB"/>
+                    <TextBlock Text="{Binding Album}" FontSize="13" Foreground="#888888"/>
+                </StackPanel>
 
-            <!-- volume -->
-            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
-                <TextBlock Text="Volume" Foreground="#AAAAAA" VerticalAlignment="Center"/>
-                <Slider Margin="4" Width="80" Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center"/>
-                <Button Content="🔇" FontSize="20" Command="{Binding ToggleMuteCommand}" Width="30" Height="30"/>
-            </StackPanel>
+                <!-- volume -->
+                <Slider  Grid.Column="1" Height="70"  Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}"
+                         HorizontalAlignment="Right" VerticalAlignment="Center" Orientation="Vertical"/>
+                <!--<StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    --><!--<TextBlock Text="Volume" Foreground="#AAAAAA" VerticalAlignment="Center"/>-->
+                    <!--<Slider Margin="4" Width="80" Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center"/>-->
+                    <!--<Button Content="🔇" FontSize="20" Command="{Binding ToggleMuteCommand}" Width="30" Height="30"/>--><!--
+                </StackPanel>-->
+            </Grid>
 
             <!-- barre de défilement temporelle -->
             <Grid Grid.Row="1">
@@ -70,7 +77,7 @@
             <!-- boutons -->
             <StackPanel Grid.Row="2"
                 Orientation="Horizontal"
-                HorizontalAlignment="Center"
+                HorizontalAlignment="Left"
                 Margin="0,15,0,0">
 
                 <Button Content="⏮" FontSize="20" Command="{Binding PreviousCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="33" Height="35" Margin="4"/>

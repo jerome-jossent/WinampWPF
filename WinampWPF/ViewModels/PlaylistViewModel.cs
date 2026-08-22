@@ -72,14 +72,16 @@ public partial class PlaylistViewModel : ViewModelBase
     }
 
     // RESTAURATION
-    public IReadOnlyList<string> GetPlaylistFilePaths()
+    public IReadOnlyList<PlaylistFileEntry> GetPlaylistEntries()
     {
-        return Tracks.Select(track => track.FilePath).ToList();
+        return Tracks
+            .Select(track => new PlaylistFileEntry(track.FilePath, track.SourceRootFolder))
+            .ToList();
     }
 
-    public async Task RestorePlaylistAsync(IEnumerable<string> filePaths)
+    public async Task RestorePlaylistAsync(IEnumerable<PlaylistFileEntry> entries)
     {
-        await AddFilesInternalAsync(filePaths);
+        await AddFilesInternalAsync(entries);
     }
 
     // AJOUT DE FICHIERS
@@ -98,7 +100,11 @@ public partial class PlaylistViewModel : ViewModelBase
         if (dialog.ShowDialog() != true)
             return;
 
-        await AddFilesInternalAsync(dialog.FileNames);
+        // Ajout individuel : pas de dossier racine, donc la colonne
+        // Fichier affichera simplement le nom du fichier.
+        var entries = dialog.FileNames.Select(f => new PlaylistFileEntry(f));
+
+        await AddFilesInternalAsync(entries);
     }
 
     // AJOUT D'UN DOSSIER
@@ -119,38 +125,46 @@ public partial class PlaylistViewModel : ViewModelBase
         // L'énumération du dossier peut elle aussi être coûteuse
         // (gros dossiers, disque réseau...), on la sort donc
         // également du thread UI.
-        var files = await Task.Run(() =>
+        var entries = await Task.Run(() =>
             Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories)
                 .Where(IsSupportedAudioFile)
+                .Select(f => new PlaylistFileEntry(f, folder))
                 .ToList());
 
-        await AddFilesInternalAsync(files);
+        await AddFilesInternalAsync(entries);
     }
 
     // DRAG & DROP
     public async Task AddDroppedFilesAsync(IEnumerable<string> paths)
     {
-        var files = await Task.Run(() =>
+        var entries = await Task.Run(() =>
         {
-            var result = new List<string>();
+            var result = new List<PlaylistFileEntry>();
 
             foreach (var path in paths)
             {
                 if (File.Exists(path))
                 {
                     if (IsSupportedAudioFile(path))
-                        result.Add(path);
+                        result.Add(new PlaylistFileEntry(path));
                     continue;
                 }
 
                 if (Directory.Exists(path))
-                    result.AddRange(Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).Where(IsSupportedAudioFile));
+                {
+                    // Le dossier glissé-déposé sert de racine, comme
+                    // pour "+ Dossier".
+                    result.AddRange(
+                        Directory.GetFiles(path, "*.*", SearchOption.AllDirectories)
+                            .Where(IsSupportedAudioFile)
+                            .Select(f => new PlaylistFileEntry(f, path)));
+                }
             }
 
             return result;
         });
 
-        await AddFilesInternalAsync(files);
+        await AddFilesInternalAsync(entries);
     }
 
     // AJOUT INTERNE (ASYNCHRONE)
@@ -158,11 +172,11 @@ public partial class PlaylistViewModel : ViewModelBase
     // se fait entièrement en arrière-plan via Task.Run : seule
     // l'insertion finale dans la ObservableCollection revient sur
     // le thread UI, comme pour le chargement par dossier.
-    private async Task AddFilesInternalAsync(IEnumerable<string> filePaths)
+    private async Task AddFilesInternalAsync(IEnumerable<PlaylistFileEntry> entries)
     {
-        var files = filePaths as IReadOnlyCollection<string> ?? filePaths.ToList();
+        var pending = entries as IReadOnlyCollection<PlaylistFileEntry> ?? entries.ToList();
 
-        if (files.Count == 0)
+        if (pending.Count == 0)
             return;
 
         IsLoading = true;
@@ -177,8 +191,10 @@ public partial class PlaylistViewModel : ViewModelBase
             {
                 var result = new List<Track>();
 
-                foreach (var file in files)
+                foreach (var entry in pending)
                 {
+                    var file = entry.FilePath;
+
                     if (!File.Exists(file))
                         continue;
 
@@ -191,6 +207,7 @@ public partial class PlaylistViewModel : ViewModelBase
                     try
                     {
                         var track = _metadataService.ReadMetadata(file);
+                        track.SourceRootFolder = entry.RootFolder;
                         result.Add(track);
                         existingPaths.Add(track.FilePath);
                     }
@@ -340,9 +357,8 @@ public partial class PlaylistViewModel : ViewModelBase
 
             "Duration" => ascending ? source.OrderBy(t => t.Duration) : source.OrderByDescending(t => t.Duration),
 
-            "File" => ascending ? source.OrderBy(t => t.FileName, StringComparer.CurrentCultureIgnoreCase)
-                    : source.OrderByDescending(t => t.FileName, StringComparer.CurrentCultureIgnoreCase),
-
+            "File" => ascending ? source.OrderBy(t => t.DisplayFile, StringComparer.CurrentCultureIgnoreCase)
+                    : source.OrderByDescending(t => t.DisplayFile, StringComparer.CurrentCultureIgnoreCase),
             // "Title" et valeur par défaut.
             _ => ascending ? source.OrderBy(t => t.DisplayTitle, StringComparer.CurrentCultureIgnoreCase)
                     : source.OrderByDescending(t => t.DisplayTitle, StringComparer.CurrentCultureIgnoreCase),
@@ -361,8 +377,8 @@ public partial class PlaylistViewModel : ViewModelBase
 
             "Duration" => ascending ? source.ThenBy(t => t.Duration) : source.ThenByDescending(t => t.Duration),
 
-            "File" => ascending ? source.ThenBy(t => t.FileName, StringComparer.CurrentCultureIgnoreCase)
-                    : source.ThenByDescending(t => t.FileName, StringComparer.CurrentCultureIgnoreCase),
+            "File" => ascending ? source.ThenBy(t => t.DisplayFile, StringComparer.CurrentCultureIgnoreCase)
+                    : source.ThenByDescending(t => t.DisplayFile, StringComparer.CurrentCultureIgnoreCase),
 
             "Title" => ascending ? source.ThenBy(t => t.DisplayTitle, StringComparer.CurrentCultureIgnoreCase)
                     : source.ThenByDescending(t => t.DisplayTitle, StringComparer.CurrentCultureIgnoreCase),

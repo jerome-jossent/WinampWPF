@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Text.Json;
+using WinampWPF.Models;
 
 namespace WinampWPF.Services.Persistence;
 
@@ -31,7 +32,20 @@ public sealed class SettingsService
 
             var json = File.ReadAllText(_settingsFile);
 
-            return JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? new AppSettings();
+            var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? new AppSettings();
+
+            // MIGRATION : anciens fichiers settings.json (liste de
+            // simples chemins, sans dossier racine par morceau).
+            if (settings.PlaylistTracks.Count == 0 && settings.PlaylistFiles is { Count: > 0 })
+            {
+                settings.PlaylistTracks = settings.PlaylistFiles
+                    .Select(f => new PlaylistFileEntry(f))
+                    .ToList();
+
+                settings.PlaylistFiles = null;
+            }
+
+            return settings;
         }
         catch
         {
