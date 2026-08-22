@@ -17,10 +17,12 @@ public partial class MainWindow : Window
     }
 
     // CHARGEMENT
-    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         // Charger playlist + shuffle + fenêtre
-        var settings = ViewModel.LoadSettings();
+        // (chargement asynchrone : la fenêtre s'affiche immédiatement,
+        // la playlist se remplit sans geler l'UI)
+        var settings = await ViewModel.LoadSettingsAsync();
 
         // TAILLE
         if (settings.WindowWidth > 0)

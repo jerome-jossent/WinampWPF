@@ -35,14 +35,14 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     }
 
     // CHARGEMENT
-    public AppSettings LoadSettings()
+    public async Task<AppSettings> LoadSettingsAsync()
     {
         var settings = _settingsService.Load();
         _loadedSettings = settings;
 
-        // PLAYLIST
+        // PLAYLIST (chargement asynchrone, comme pour l'ajout par dossier)
         if (settings.PlaylistFiles.Count > 0)
-            Playlist.RestorePlaylist(settings.PlaylistFiles);
+            await Playlist.RestorePlaylistAsync(settings.PlaylistFiles);
 
         // SHUFFLE
         if (settings.ShuffleEnabled && !Player.ShuffleEnabled)

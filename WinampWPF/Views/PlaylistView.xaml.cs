@@ -100,7 +100,7 @@ public partial class PlaylistView : UserControl
         e.Handled = true;
     }
 
-    private void PlaylistView_Drop(object sender, DragEventArgs e)
+    private async void PlaylistView_Drop(object sender, DragEventArgs e)
     {
         if (!e.Data.GetDataPresent(DataFormats.FileDrop))
             return;
@@ -108,7 +108,9 @@ public partial class PlaylistView : UserControl
         if (e.Data.GetData(DataFormats.FileDrop) is not string[] paths)
             return;
 
-        ViewModel?.AddDroppedFiles(paths);
         e.Handled = true;
+
+        if (ViewModel is not null)
+            await ViewModel.AddDroppedFilesAsync(paths);
     }
 }

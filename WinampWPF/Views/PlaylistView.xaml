@@ -12,6 +12,7 @@
              Drop="PlaylistView_Drop">
     <UserControl.Resources>
         <local:BoolToFontWeightConverter x:Key="BoolToFontWeightConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </UserControl.Resources>
     <Grid>
 
@@ -28,6 +29,9 @@
                 <Button Content="Supprimer" Command="{Binding RemoveSelectedCommand}" Margin="0,0,5,0" Padding="5"/>
                 <Button Content="Vider" Command="{Binding ClearCommand}" Margin="0,0,5,0" Padding="5"/>
                 <Button Content="Ajouter à la file" Command="{Binding EnqueueSelectedCommand}" Margin="0,0,5,0" Padding="5"/>
+                <TextBlock Text="Chargement..." Foreground="GreenYellow" VerticalAlignment="Center"
+                           Margin="10,0,0,0"
+                           Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
             </StackPanel>
 
             <TextBox DockPanel.Dock="Right" Width="220" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rechercher..."/>

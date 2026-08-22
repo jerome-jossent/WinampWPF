@@ -28,6 +28,12 @@ public partial class PlaylistViewModel : ViewModelBase
     [ObservableProperty]
     private Track? _selectedTrack;
 
+    // CHARGEMENT ASYNCHRONE
+    // Vrai pendant la lecture des métadonnées (démarrage,
+    // ajout de fichiers/dossier, glisser-déposer).
+    [ObservableProperty]
+    private bool _isLoading;
+
     // RECHERCHE
     [ObservableProperty]
     private string _searchText = string.Empty;
@@ -71,14 +77,14 @@ public partial class PlaylistViewModel : ViewModelBase
         return Tracks.Select(track => track.FilePath).ToList();
     }
 
-    public void RestorePlaylist(IEnumerable<string> filePaths)
+    public async Task RestorePlaylistAsync(IEnumerable<string> filePaths)
     {
-        AddFilesInternal(filePaths);
+        await AddFilesInternalAsync(filePaths);
     }
 
     // AJOUT DE FICHIERS
     [RelayCommand]
-    private void AddFiles()
+    private async Task AddFiles()
     {
         var dialog = new OpenFileDialog
         {
@@ -92,12 +98,12 @@ public partial class PlaylistViewModel : ViewModelBase
         if (dialog.ShowDialog() != true)
             return;
 
-        AddFilesInternal(dialog.FileNames);
+        await AddFilesInternalAsync(dialog.FileNames);
     }
 
     // AJOUT D'UN DOSSIER
     [RelayCommand]
-    private void AddFolder()
+    private async Task AddFolder()
     {
         var dialog = new OpenFolderDialog
         {
@@ -108,64 +114,113 @@ public partial class PlaylistViewModel : ViewModelBase
         if (dialog.ShowDialog() != true)
             return;
 
-        var files = Directory.GetFiles(dialog.FolderName, "*.*", SearchOption.AllDirectories).Where(IsSupportedAudioFile);
-        AddFilesInternal(files);
+        var folder = dialog.FolderName;
+
+        // L'énumération du dossier peut elle aussi être coûteuse
+        // (gros dossiers, disque réseau...), on la sort donc
+        // également du thread UI.
+        var files = await Task.Run(() =>
+            Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories)
+                .Where(IsSupportedAudioFile)
+                .ToList());
+
+        await AddFilesInternalAsync(files);
     }
 
     // DRAG & DROP
-    public void AddDroppedFiles(IEnumerable<string> paths)
+    public async Task AddDroppedFilesAsync(IEnumerable<string> paths)
     {
-        var files = new List<string>();
-
-        foreach (var path in paths)
+        var files = await Task.Run(() =>
         {
-            if (File.Exists(path))
+            var result = new List<string>();
+
+            foreach (var path in paths)
             {
-                if (IsSupportedAudioFile(path))
-                    files.Add(path);
-                continue;
+                if (File.Exists(path))
+                {
+                    if (IsSupportedAudioFile(path))
+                        result.Add(path);
+                    continue;
+                }
+
+                if (Directory.Exists(path))
+                    result.AddRange(Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).Where(IsSupportedAudioFile));
             }
 
-            if (Directory.Exists(path))
-                files.AddRange(Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).Where(IsSupportedAudioFile));
-        }
+            return result;
+        });
 
-        AddFilesInternal(files);
+        await AddFilesInternalAsync(files);
     }
 
-    // AJOUT INTERNE
-    private void AddFilesInternal(IEnumerable<string> files)
+    // AJOUT INTERNE (ASYNCHRONE)
+    // La lecture des métadonnées (I/O disque + parsing des tags)
+    // se fait entièrement en arrière-plan via Task.Run : seule
+    // l'insertion finale dans la ObservableCollection revient sur
+    // le thread UI, comme pour le chargement par dossier.
+    private async Task AddFilesInternalAsync(IEnumerable<string> filePaths)
     {
-        foreach (var file in files)
+        var files = filePaths as IReadOnlyCollection<string> ?? filePaths.ToList();
+
+        if (files.Count == 0)
+            return;
+
+        IsLoading = true;
+
+        try
         {
-            if (!File.Exists(file))
-                continue;
+            var existingPaths = new HashSet<string>(
+                Tracks.Select(t => t.FilePath),
+                StringComparer.OrdinalIgnoreCase);
 
-            if (!IsSupportedAudioFile(file))
-                continue;
-
-            if (Tracks.Any(t => string.Equals(t.FilePath, file, StringComparison.OrdinalIgnoreCase)))
-                continue;
-
-
-            try
+            var newTracks = await Task.Run(() =>
             {
-                var track = _metadataService.ReadMetadata(file);
+                var result = new List<Track>();
+
+                foreach (var file in files)
+                {
+                    if (!File.Exists(file))
+                        continue;
+
+                    if (!IsSupportedAudioFile(file))
+                        continue;
+
+                    if (existingPaths.Contains(file))
+                        continue;
+
+                    try
+                    {
+                        var track = _metadataService.ReadMetadata(file);
+                        result.Add(track);
+                        existingPaths.Add(track.FilePath);
+                    }
+                    catch
+                    {
+                        // On ignore les fichiers impossibles à lire.
+                    }
+                }
+
+                return result;
+            });
+
+            if (newTracks.Count == 0)
+                return;
+
+            foreach (var track in newTracks)
                 Tracks.Add(track);
-            }
-            catch
-            {
-                // On ignore les fichiers impossibles à lire.
-            }
+
+            ApplyCurrentSort();
+
+            RefreshFilteredTracks();
+
+            SyncController();
+
+            NotifyPlaylistChanged();
         }
-
-        ApplyCurrentSort();
-
-        RefreshFilteredTracks();
-
-        SyncController();
-
-        NotifyPlaylistChanged();
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     // SUPPRESSION
