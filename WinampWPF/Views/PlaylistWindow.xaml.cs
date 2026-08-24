@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Input;
 using WinampWPF.ViewModels;
 
 namespace WinampWPF.Views;
@@ -13,6 +14,14 @@ public partial class PlaylistWindow : Window
     {
         InitializeComponent();
         DataContext = playlist;
+
+        this.MouseLeftButtonDown += PlaylistWindow_MouseLeftButtonDown;
+    }
+
+    private void PlaylistWindow_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ButtonState == MouseButtonState.Pressed)
+            this.DragMove();
     }
 
     // VÉRIFICATION POSITION

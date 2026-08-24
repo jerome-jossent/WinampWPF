@@ -4,7 +4,7 @@
         xmlns:views="clr-namespace:WinampWPF.Views"
 
         Title="{Binding ApplicationName}"
-
+        
         Width="450"
         Height="250"
 
@@ -18,10 +18,10 @@
         <!--Height="202"-->
         <!--SizeToContent="WidthAndHeight"-->
         <!--ResizeMode="CanMinimize"-->
-        
+
     <Grid Margin="0">
-        <views:PlayerView
-            DataContext="{Binding Player}"/>
+
+        <views:PlayerView DataContext="{Binding Player}" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"/>
 
         <Button Width="30" Height="35" Margin="4"
                 VerticalAlignment="Bottom"

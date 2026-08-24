@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Input;
 using WinampWPF.ViewModels;
 using WinampWPF.Views;
 
@@ -146,6 +147,8 @@ public partial class MainWindow : Window
         Top = SystemParameters.WorkArea.Top + (SystemParameters.WorkArea.Height - height) / 2;
     }
 
+    //MOVE WINDOW
+
     // FERMETURE
     private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
@@ -174,5 +177,11 @@ public partial class MainWindow : Window
     private void Close_Click(object sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ButtonState == MouseButtonState.Pressed)        
+            this.DragMove();        
     }
 }
