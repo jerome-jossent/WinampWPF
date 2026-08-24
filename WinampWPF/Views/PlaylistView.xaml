@@ -24,17 +24,56 @@
         <!-- BARRE D'OUTILS -->
         <DockPanel Grid.Row="0" Margin="0">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                <Button Content="+ Fichiers" Command="{Binding AddFilesCommand}" Margin="0,0,5,0" Padding="5"/>
-                <Button Content="+ Dossier" Command="{Binding AddFolderCommand}" Margin="0,0,5,0" Padding="5"/>
-                <Button Content="Supprimer" Command="{Binding RemoveSelectedCommand}" Margin="0,0,5,0" Padding="5"/>
-                <Button Content="Vider" Command="{Binding ClearCommand}" Margin="0,0,5,0" Padding="5"/>
-                <Button Content="Ajouter à la file" Command="{Binding EnqueueSelectedCommand}" Margin="0,0,5,0" Padding="5"/>
+                <Button Content="+ Fichiers" Command="{Binding AddFilesCommand}" Height="30" Margin="0,0,5,0" Padding="5">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Image Stretch="Uniform" Source="/Resources/fichier.png"></Image>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Button Content="+ Dossier" Command="{Binding AddFolderCommand}" Height="30" Margin="0,0,5,0" Padding="5">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Image Stretch="Uniform" Source="/Resources/folder.png"></Image>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Button Content="Supprimer" Command="{Binding RemoveSelectedCommand}" Height="30" Margin="0,0,5,0" Padding="5">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Image Stretch="Uniform" Source="/Resources/Moins.png"></Image>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Button Content="Vider" Command="{Binding ClearCommand}" Height="30" Margin="0,0,5,0" Padding="5">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Image Stretch="Uniform" Source="/Resources/Corbeille.png"></Image>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Button Content="Ajouter à la file" Command="{Binding EnqueueSelectedCommand}" Height="30" Margin="0,0,5,0" Padding="5">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Image Stretch="Uniform" Source="/Resources/Plus.png"></Image>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+
                 <TextBlock Text="Chargement..." Foreground="GreenYellow" VerticalAlignment="Center"
                            Margin="10,0,0,0"
                            Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"/>
-            </StackPanel>
 
-            <TextBox DockPanel.Dock="Right" Width="220" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rechercher..."/>
+                <TextBox Width="220" Margin="5,0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rechercher..."/>
+
+                <TextBlock Foreground="LightGray" VerticalAlignment="Center" Margin="5,0" Text="{Binding TotalDurationText}" />
+
+                <TextBlock Foreground="LightGray" VerticalAlignment="Center" Text="["/>
+                <TextBlock Foreground="LightGray" VerticalAlignment="Center" Text="{Binding TrackCount}" />
+                <TextBlock Foreground="LightGray" VerticalAlignment="Center" Text="]"/>
+
+            </StackPanel>
         </DockPanel>
 
         <!-- PLAYLIST -->
@@ -51,10 +90,38 @@
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="GreenYellow"/>
+
+                    <Style.Resources>
+                        <!-- Neutralise les pinceaux système WPF par défaut -->
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#383838"/>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#FFFFFF"/>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#2A2A2A"/>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#CCCCCC"/>
+                    </Style.Resources>
+
                     <Style.Triggers>
+                        <!-- 1. Survol d'une ligne non sélectionnée -->
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#2A2A2A"/>
+                            <Setter Property="Background" Value="#252525"/>
                         </Trigger>
+
+                        <!-- 2. Ligne sélectionnée (quand la souris N'EST PAS dessus) -->
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="#383838"/>
+                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                            <!-- Texte blanc bien lisible -->
+                        </Trigger>
+
+                        <!-- 3. Ligne sélectionnée ET survolée -->
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsSelected" Value="True"/>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter Property="Background" Value="#4A4A4A"/>
+                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                        </MultiTrigger>
                     </Style.Triggers>
                 </Style>
             </ListView.ItemContainerStyle>

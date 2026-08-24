@@ -5,15 +5,17 @@
 
         Title="{Binding ApplicationName}"
 
-        ResizeMode="CanResizeWithGrip"
-        Height="202"
+        Width="450"
+        Height="250"
 
-        WindowStyle="SingleBorderWindow"
+        WindowStyle="None"
         BorderBrush="Black"
         BorderThickness="5"
 
         Background="#101010">
 
+        <!--ResizeMode="CanResizeWithGrip"-->
+        <!--Height="202"-->
         <!--SizeToContent="WidthAndHeight"-->
         <!--ResizeMode="CanMinimize"-->
         
@@ -27,5 +29,16 @@
                 Content="▤" FontSize="20"
                 Click="PlaylistToggle_Click"
                 />
+
+        <!-- close -->
+        <Button Grid.Column="0" Content="Close" FontSize="20" Click="Close_Click" 
+                            HorizontalAlignment="Left" VerticalAlignment="Top" Width="20" Height="20" Margin="4">
+            <Button.Template>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Image Stretch="Uniform" Source="/Resources/croix.png"></Image>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+        
     </Grid>
 </Window>

@@ -5,7 +5,67 @@
     x:Class="WinampWPF.Views.PlayerView"
     av:DesignHeight="199.83" av:DesignWidth="470"    
     >
+    <UserControl.Resources>
+        <!-- 1. Style du Thumb avec l'image -->
+        <Style x:Key="ImageThumbStyle" TargetType="{x:Type Thumb}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Thumb}">
+                        <Image Source="/Resources/curseur_on.png" 
+                           Width="16" 
+                           Height="30" 
+                           Stretch="Uniform"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
+        <!-- 2. Template du Slider avec la barre de progression -->
+        <ControlTemplate x:Key="CustomSliderTemplate" TargetType="{x:Type Slider}">
+            <Grid VerticalAlignment="Center">
+                <!-- Fond complet de la barre (Partie restante / Droite) -->
+                <Border Height="6" 
+                    CornerRadius="3" 
+                    Background="#E0E0E0" 
+                    VerticalAlignment="Center" />
+
+                <!-- Rail interactif -->
+                <Track x:Name="PART_Track">
+                    <!-- Partie parcourue (Gauche) -->
+                    <Track.DecreaseRepeatButton>
+                        <RepeatButton Command="{x:Static Slider.DecreaseLarge}">
+                            <RepeatButton.Template>
+                                <ControlTemplate TargetType="{x:Type RepeatButton}">
+                                    <Border Height="6" 
+                                        CornerRadius="0" 
+                                        Background="#00CC7A" />
+                                    <!-- COULEUR DE PROGRESSION -->
+                                </ControlTemplate>
+                            </RepeatButton.Template>
+                        </RepeatButton>
+                    </Track.DecreaseRepeatButton>
+
+                    <!-- Partie restante (Masquée car gérée par le fond) -->
+                    <Track.IncreaseRepeatButton>
+                        <RepeatButton Command="{x:Static Slider.IncreaseLarge}">
+                            <RepeatButton.Template>
+                                <ControlTemplate TargetType="{x:Type RepeatButton}">
+                                    <Border Background="Transparent" />
+                                </ControlTemplate>
+                            </RepeatButton.Template>
+                        </RepeatButton>
+                    </Track.IncreaseRepeatButton>
+
+                    <!-- Le Thumb avec l'image -->
+                    <Track.Thumb>
+                        <Thumb Style="{StaticResource ImageThumbStyle}" />
+                    </Track.Thumb>
+                </Track>
+            </Grid>
+        </ControlTemplate>
+
+
+    </UserControl.Resources>
     <Border
         Background="#181818"
         CornerRadius="8">
@@ -14,35 +74,58 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="auto"/>
                 </Grid.ColumnDefinitions>
+
+                <!-- close --><!--
+                <Button Grid.Column="0" Content="Close" FontSize="20" Command="{Binding PreviousCommand}" 
+                            HorizontalAlignment="Center" VerticalAlignment="Top" Width="20" Height="20" Margin="4">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Image Stretch="Uniform" Source="/Resources/croix.png"></Image>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>-->
                 
                 <!-- titres -->
-                <StackPanel Grid.Column="0" >
+                <StackPanel Grid.Column="1" HorizontalAlignment="Center" >
+                    <StackPanel Orientation="Horizontal" >
+                        <TextBlock Text="{Binding Artist}" VerticalAlignment="Center" FontSize="15" Foreground="#BBBBBB"/>
+                        <TextBlock Margin="5,0,0,0" Text="{Binding Album}" VerticalAlignment="Center" FontSize="13" Foreground="#888888"/>
+                    </StackPanel>
                     <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="{Binding Artist}" FontSize="15" Foreground="#BBBBBB"/>
-                    <TextBlock Text="{Binding Album}" FontSize="13" Foreground="#888888"/>
                 </StackPanel>
 
                 <!-- volume -->
-                <Slider  Grid.Column="1" Height="70"  Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}"
-                         HorizontalAlignment="Right" VerticalAlignment="Center" Orientation="Vertical"/>
+                <Slider  Grid.Column="2" Width="50" Margin="-10,10"  Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}"
+                         HorizontalAlignment="Right" VerticalAlignment="Center" 
+                        Template="{StaticResource CustomSliderTemplate}" RenderTransformOrigin="0.5,0.5">
+                    <Slider.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform/>
+                            <SkewTransform/>
+                            <RotateTransform Angle="-90"/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </Slider.RenderTransform>
+                </Slider>
                 <!--<StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                    --><!--<TextBlock Text="Volume" Foreground="#AAAAAA" VerticalAlignment="Center"/>-->
-                    <!--<Slider Margin="4" Width="80" Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center"/>-->
-                    <!--<Button Content="🔇" FontSize="20" Command="{Binding ToggleMuteCommand}" Width="30" Height="30"/>--><!--
+                    -->
+                <!--<TextBlock Text="Volume" Foreground="#AAAAAA" VerticalAlignment="Center"/>-->
+                <!--<Slider Margin="4" Width="80" Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center"/>-->
+                <!--<Button Content="🔇" FontSize="20" Command="{Binding ToggleMuteCommand}" Width="30" Height="30"/>-->
+                <!--
                 </StackPanel>-->
             </Grid>
 
             <!-- barre de défilement temporelle -->
             <Grid Grid.Row="1">
-
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -64,7 +147,8 @@
                     Cursor="Hand"
 
                     PreviewMouseLeftButtonDown="ProgressSlider_PreviewMouseLeftButtonDown"
-                    PreviewMouseLeftButtonUp="ProgressSlider_PreviewMouseLeftButtonUp"/>
+                    PreviewMouseLeftButtonUp="ProgressSlider_PreviewMouseLeftButtonUp"
+                        Template="{StaticResource CustomSliderTemplate}"/>
 
                 <TextBlock
                     Grid.Column="2"
@@ -77,14 +161,40 @@
             <!-- boutons -->
             <StackPanel Grid.Row="2"
                 Orientation="Horizontal"
-                HorizontalAlignment="Left"
-                Margin="0,15,0,0">
+                HorizontalAlignment="Left">
 
-                <Button Content="⏮" FontSize="20" Command="{Binding PreviousCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="33" Height="35" Margin="4"/>
-                <Button Content="▶/⏸" FontSize="20" Command="{Binding TogglePlayPauseCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="63" Height="35" Margin="4"/>
-                <!--<Button Content="⏹" FontSize="20" Command="{Binding StopCommand}" Width="55" Margin="4"/>-->
-                <Button Content="⏭" FontSize="20" Command="{Binding NextCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="33" Height="35" Margin="4"/>
-                <Button Content="🔀" FontSize="20" Command="{Binding ToggleShuffleCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="33" Height="35" Margin="4"/>
+                <Button Content="⏮" FontSize="20" Command="{Binding PreviousCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="33" Height="35" Margin="4">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Image Stretch="Uniform" Source="/Resources/Précédent.png"></Image>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button Content="▶/⏸" FontSize="20" Command="{Binding TogglePlayPauseCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="63" Height="35" Margin="4">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Image Stretch="Uniform" Source="/Resources/play_pause.png"></Image>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button Content="⏭" FontSize="20" Command="{Binding NextCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="33" Height="35" Margin="4">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Image Stretch="Uniform" Source="/Resources/Suivant.png"></Image>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button Content="🔀" FontSize="20" Command="{Binding ToggleShuffleCommand}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="33" Height="35" Margin="4">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Image Stretch="Uniform" Source="/Resources/shuffle.png"></Image>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
                 <TextBlock VerticalAlignment="Center" Text="{Binding ShuffleEnabled, StringFormat=Shuffle : \{0\}}" Foreground="#AAAAAA" Margin="10,0,0,0"/>
 
             </StackPanel>

@@ -36,6 +36,10 @@ public partial class MainWindow : Window
         // (chargement asynchrone : la fenêtre s'affiche immédiatement,
         // la playlist se remplit sans geler l'UI)
         var settings = await ViewModel.LoadSettingsAsync();
+        Width = settings.WindowWidth;
+        Height = settings.WindowHeight;
+        Left = settings.WindowLeft;
+        Top = settings.WindowTop;
 
         // POSITION (le lecteur se dimensionne lui-même à son contenu)
         if (!double.IsNaN(settings.WindowLeft))
@@ -165,5 +169,10 @@ public partial class MainWindow : Window
             _playlistWasOpen, _playlistWidth, _playlistHeight, _playlistLeft, _playlistTop);
 
         ViewModel.Dispose();
+    }
+
+    private void Close_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
     }
 }
